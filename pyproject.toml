@@ -7,7 +7,7 @@ name = "selfstudy_oai"
 version = "0.1.0"
 description = "A collection of machine learning competition solutions and exercises"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Dust Dustov", email = "dustdustov0@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.8"
@@ -20,4 +20,16 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3 
+multi_line_output = 3
+
+[tool.nbqa.config]
+black = "pyproject.toml"
+isort = "pyproject.toml"
+flake8 = "pyproject.toml"
+
+[tool.nbqa.addopts]
+flake8 = ["--extend-ignore=E402,F401"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"] 

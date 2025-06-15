@@ -39,10 +39,46 @@ conda activate selfstudy_oai
 
 ## Development
 
-- Use `black` for code formatting
-- Use `isort` for import sorting
-- Use `flake8` for linting
+### Code Quality Tools
+
+- Use `black` for code formatting (Python files and notebooks)
+- Use `isort` for import sorting (Python files and notebooks)
+- Use `flake8` for linting (Python files and notebooks)
+- Use `nbqa` to apply these tools to Jupyter notebooks
 - Run tests with `pytest`
+
+### Commands
+
+```bash
+# Format code
+black .
+nbqa black .
+
+# Sort imports
+isort .
+nbqa isort .
+
+# Lint code
+flake8 .
+nbqa flake8 .
+
+# Run all quality checks
+black . --check && nbqa black . --check && \
+isort . --check-only && nbqa isort . --check-only && \
+flake8 . && nbqa flake8 .
+
+# Run tests
+pytest tests/
+```
+
+### Pre-commit Setup (Optional)
+
+For automatic code formatting on commit, install pre-commit hooks:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
 
 ## License
 
