@@ -1,8 +1,9 @@
 """Basic tests to ensure the testing framework is working."""
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add the project root to the path so we can import modules
 project_root = Path(__file__).parent.parent
@@ -17,12 +18,12 @@ def test_python_version():
 def test_imports():
     """Test that essential packages can be imported."""
     try:
-        import numpy
-        import pandas
-        import sklearn
-        import matplotlib
-        import seaborn
-        import jupyter
+        import jupyter  # noqa: F401
+        import matplotlib  # noqa: F401
+        import numpy  # noqa: F401
+        import pandas  # noqa: F401
+        import seaborn  # noqa: F401
+        import sklearn  # noqa: F401
     except ImportError as e:
         pytest.fail(f"Failed to import essential package: {e}")
 
@@ -30,13 +31,13 @@ def test_imports():
 def test_project_structure():
     """Test that the project structure is correct."""
     project_root = Path(__file__).parent.parent
-    
+
     # Check essential directories exist
     assert (project_root / "problems").exists()
     assert (project_root / "scripts").exists()
     assert (project_root / "tests").exists()
     assert (project_root / ".github" / "workflows").exists()
-    
+
     # Check essential files exist
     assert (project_root / "README.md").exists()
     assert (project_root / "requirements.txt").exists()
@@ -44,4 +45,4 @@ def test_project_structure():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    pytest.main([__file__])

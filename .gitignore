@@ -47,3 +47,17 @@ Thumbs.db
 # Project specific
 data/*
 !data/.gitkeep 
+
+# Development/Personal files (not for public release)
+TODO
+NOTES
+notes.txt
+*.bak
+*.tmp
+.env
+.env.local
+
+# Logs and temporary files
+*.log
+*.out
+*.err 
