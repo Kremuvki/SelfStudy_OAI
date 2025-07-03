@@ -28,7 +28,7 @@ def clean_notebook(notebook_path: Path) -> bool:
         return False
 
     modified = False
-    
+
     # Clean cells
     for cell in notebook.get("cells", []):
         # Remove execution count
@@ -40,7 +40,7 @@ def clean_notebook(notebook_path: Path) -> bool:
         if "outputs" in cell and cell["outputs"]:
             cell["outputs"] = []
             modified = True
-        
+
         # Remove metadata that can cause diffs
         if "metadata" in cell:
             metadata_to_remove = ["collapsed", "scrolled", "execution"]
@@ -48,7 +48,7 @@ def clean_notebook(notebook_path: Path) -> bool:
                 if key in cell["metadata"]:
                     del cell["metadata"][key]
                     modified = True
-    
+
     # Clean notebook-level metadata
     if "metadata" in notebook:
         if "widgets" in notebook["metadata"]:
@@ -85,9 +85,9 @@ def main():
         description="Clean Jupyter notebooks by removing outputs and execution counts"
     )
     parser.add_argument(
-        "paths", 
-        nargs="*", 
-        default=["."], 
+        "paths",
+        nargs="*",
+        default=["."],
         help="Paths to notebooks or directories (default: current directory)",
     )
     parser.add_argument(
@@ -97,18 +97,18 @@ def main():
     )
     parser.add_argument(
         "--dry-run",
-        action="store_true", 
+        action="store_true",
         help="Show what would be cleaned without making changes",
     )
-    
+
     args = parser.parse_args()
-    
+
     notebook_paths = []
-    
+
     # Collect all notebook paths
     for path_str in args.paths:
         path = Path(path_str)
-        
+
         if not path.exists():
             print(f"❌ Path does not exist: {path}")
             sys.exit(1)
@@ -131,7 +131,7 @@ def main():
         for nb_path in notebook_paths:
             print(f"   Would clean: {nb_path}")
         return
-    
+
     # Clean notebooks
     modified_count = 0
     for nb_path in notebook_paths:
@@ -144,4 +144,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

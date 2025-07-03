@@ -22,11 +22,13 @@ NOTEBOOK_NAME = "niezbalansowana_klasyfikacja.ipynb"
 
 ######################### KOD Z NOTEBOOKA ##########################
 
+
 class ImageDataset(torch.utils.data.Dataset):
     """Implementacja abstrakcji zbioru danych z torch'a."""
+
     def __init__(self, dataset_type: str):
         self.filelist = glob.glob(f"{dataset_type}_data/*")
-        self.labels   = [0 if "normal" in path else 1 for path in self.filelist]
+        self.labels = [0 if "normal" in path else 1 for path in self.filelist]
 
     def __len__(self):
         return len(self.filelist)
@@ -34,10 +36,12 @@ class ImageDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx) -> tuple[torch.Tensor, int]:
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        image = torchvision.transforms.functional.to_tensor(plt.imread(self.filelist[idx])[:,:,0])
+        image = torchvision.transforms.functional.to_tensor(
+            plt.imread(self.filelist[idx])[:, :, 0]
+        )
         label = self.labels[idx]
         return image, label
-    
+
     def loader(self, **kwargs) -> torch.utils.data.DataLoader:
         """
         Stwórz, `DataLoader`'a dla aktualnego zbioru danych.
@@ -47,15 +51,18 @@ class ImageDataset(torch.utils.data.Dataset):
         Możesz dowiedzieć się o nich więcej tutaj: https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader
         """
         return torch.utils.data.DataLoader(self, **kwargs)
-    
+
+
 if not os.path.exists("valid_data"):
     exit("Nie znaleziono zbioru testowego. Uruchom notebook'a w celu jego pobrania.")
 
 valid_dataset: ImageDataset = ImageDataset("valid")
 
+
 def accuracy_to_points(accuracy: float) -> float:
     """Oblicz wynik na podstawie celności predykcji."""
     return (round(accuracy, 2) - 0.5) * 2 if accuracy > 0.5 else 0.0
+
 
 def grade(model):
     """Oceń ile punktów otrzyma aktualne zadanie."""
@@ -75,50 +82,66 @@ def grade(model):
         print(f"Accuracy: {int(round(accuracy, 2) * 100)}%")
         return accuracy_to_points(accuracy)
 
+
 def evaluate_model(model):
     """Oceń ile punktów otrzyma aktualne zadanie."""
     return grade(model)
 
+
 def main():
-    
+
     command = [
-        "jupyter", "nbconvert", 
-        "--to", "script", 
-        "--output", NOTEBOOK_AS_SCRIPT.split(".")[0], 
-        NOTEBOOK_NAME
+        "jupyter",
+        "nbconvert",
+        "--to",
+        "script",
+        "--output",
+        NOTEBOOK_AS_SCRIPT.split(".")[0],
+        NOTEBOOK_NAME,
     ]
 
     subprocess.run(command)
 
     if not os.path.exists(MODEL_PATH):
-        exit(f"Błąd: wymagany plik '{MODEL_PATH}' z parametrami modelu nie znaleziony w {os.getcwd()}")
+        exit(
+            f"Błąd: wymagany plik '{MODEL_PATH}' z parametrami modelu nie znaleziony w {os.getcwd()}"
+        )
 
     if not TRAIN:
         with open(NOTEBOOK_AS_SCRIPT, "r", encoding="utf8") as file:
             filedata = file.read()
-            filedata = re.sub("FINAL_EVALUATION_MODE = False", "FINAL_EVALUATION_MODE = True", filedata)
+            filedata = re.sub(
+                "FINAL_EVALUATION_MODE = False",
+                "FINAL_EVALUATION_MODE = True",
+                filedata,
+            )
 
         with open(NOTEBOOK_AS_SCRIPT, "w") as file:
             file.write(filedata)
 
     vars = {
-        'script': str(Path(NOTEBOOK_AS_SCRIPT).name),
-        '__file__': str(Path(NOTEBOOK_AS_SCRIPT)),
+        "script": str(Path(NOTEBOOK_AS_SCRIPT).name),
+        "__file__": str(Path(NOTEBOOK_AS_SCRIPT)),
     }
     exec(open(NOTEBOOK_AS_SCRIPT).read(), vars)
 
     YourCnnClassifier = vars.get("YourCnnClassifier", None)
 
     if YourCnnClassifier is None:
-        exit(f"Błąd: Wymagana klasa 'YourCnnClassifier' nie znajduje się w '{NOTEBOOK_NAME}'.")
-    
+        exit(
+            f"Błąd: Wymagana klasa 'YourCnnClassifier' nie znajduje się w '{NOTEBOOK_NAME}'."
+        )
+
     if not hasattr(YourCnnClassifier, "load"):
-        exit(f"Błąd: wymagana metoda 'load' klasy 'YourCnnClassifier' nie znajduje się w '{NOTEBOOK_NAME}'.")
+        exit(
+            f"Błąd: wymagana metoda 'load' klasy 'YourCnnClassifier' nie znajduje się w '{NOTEBOOK_NAME}'."
+        )
 
     model = YourCnnClassifier.load()
 
     point_grade = evaluate_model(model)
     print(f"Ocena: {point_grade} pkt")
+
 
 if __name__ == "__main__":
     main()

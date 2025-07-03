@@ -12,8 +12,8 @@ from tqdm.auto import tqdm
 import argparse
 
 
-parser = argparse.ArgumentParser(description='Run the script with or without training.')
-parser.add_argument('--train', action='store_true', help='Enable training mode.')
+parser = argparse.ArgumentParser(description="Run the script with or without training.")
+parser.add_argument("--train", action="store_true", help="Enable training mode.")
 args = parser.parse_args()
 TRAIN = args.train
 
@@ -83,14 +83,16 @@ class MLP(nn.Module):
         return mse_loss(input, target)
 
 
-def load_parameters(model, file_name="model_parameters.pkl", from_file=True, params=None):
+def load_parameters(
+    model, file_name="model_parameters.pkl", from_file=True, params=None
+):
 
     if from_file:
         with open(f"{file_name}", "rb") as f:
             params_to_load = pickle.load(f)
     else:
         params_to_load = params
-        
+
     for name, param in model.named_parameters():
         with torch.no_grad():
             param[...] = params_to_load[name].to(device)
@@ -159,6 +161,7 @@ def points(score):
     def scale(x, lower=0.085, upper=0.95, max_points=1.5):
         scaled = min(max(x, lower), upper)
         return (scaled - lower) / (upper - lower) * max_points
+
     return scale(score)
 
 
@@ -191,9 +194,7 @@ def evaluate_algorithm(X_test, y_test):
     return model_score
 
 
-X_test, y_test = load_test_data(
-    "valid_data/X_valid.npy", "valid_data/y_valid.npy"
-)
+X_test, y_test = load_test_data("valid_data/X_valid.npy", "valid_data/y_valid.npy")
 
 model_score = evaluate_algorithm(X_test, y_test)
 

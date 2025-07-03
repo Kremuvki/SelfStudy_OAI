@@ -17,10 +17,13 @@ python_script_filename = "zadanie_jako_skrypt.py"
 
 # Command to convert .ipynb to .py
 command = [
-    "jupyter", "nbconvert", 
-    "--to", "script", 
-    "--output", python_script_filename.split(".")[0], 
-    "ataki_adwersarialne.ipynb"
+    "jupyter",
+    "nbconvert",
+    "--to",
+    "script",
+    "--output",
+    python_script_filename.split(".")[0],
+    "ataki_adwersarialne.ipynb",
 ]
 
 subprocess.run(command)
@@ -28,15 +31,17 @@ subprocess.run(command)
 # replace line CLEAN_VERSION = False with CLEAN_VERSION = True
 with open(python_script_filename, "r") as file:
     filedata = file.read()
-    filedata = re.sub("FINAL_EVALUATION_MODE = False", "FINAL_EVALUATION_MODE = True", filedata)
+    filedata = re.sub(
+        "FINAL_EVALUATION_MODE = False", "FINAL_EVALUATION_MODE = True", filedata
+    )
 
 with open(python_script_filename, "w") as file:
     file.write(filedata)
 
 # execute the python file
 vars = {
-    'script': str(Path(python_script_filename).name),
-    '__file__': str(Path(python_script_filename)),
+    "script": str(Path(python_script_filename).name),
+    "__file__": str(Path(python_script_filename)),
 }
 exec(open(python_script_filename).read(), vars)
 
@@ -46,6 +51,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from copy import deepcopy
 from skimage.metrics import structural_similarity as ssim
+
 
 class ContestDataset(Dataset):
     def __init__(self, data, labels, transform=None):
@@ -62,13 +68,11 @@ class ContestDataset(Dataset):
             x = self.transform(x)
         y = self.labels[index]
         return x, y
-    
+
+
 ############### KOD PUNKTUJĄCY ####################################
 ######################### NIE ZMIENIAJ TEJ KOMÓRKI ##########################
-def evaluate_network(data_loader,
-                     model,
-                     device,
-                     verbose=True):
+def evaluate_network(data_loader, model, device, verbose=True):
     # Dokonajmy ewaluacji wytrenowanego modelu na wybranym zbiorze
     all_predictions, all_labels = [], []
     model.to(device)
@@ -87,15 +91,17 @@ def evaluate_network(data_loader,
     all_labels = torch.cat(all_labels, dim=0)
     # Sprawdzamy, ile etykiet zostało prawidłowo wytypowanych przez sieć
     correct = (all_predictions == all_labels).sum().item()
-    accuracy = (100 * correct / all_labels.size()[0])
+    accuracy = 100 * correct / all_labels.size()[0]
     no_of_elements = len(data_loader.dataset)
     if verbose:
-        print(f'Dokładność klasyfikacji na {no_of_elements} obrazów wybranego zbioru wynosi '
-              f'{accuracy} %.')
+        print(
+            f"Dokładność klasyfikacji na {no_of_elements} obrazów wybranego zbioru wynosi "
+            f"{accuracy} %."
+        )
     return accuracy
 
-def calculate_similarity(original_dataset,
-                         perturbed_dataset):
+
+def calculate_similarity(original_dataset, perturbed_dataset):
     # Zarówno original_dataset jak i perturbed_dataset mają być typu Numpy array.
     # Mają mieć taki sam rozmiar, tj. (liczba elementów x 28 x 28)
     assert original_dataset.shape == perturbed_dataset.shape
@@ -105,47 +111,32 @@ def calculate_similarity(original_dataset,
     for i in range(original_dataset.shape[0]):
         original_element = original_dataset[i].ravel()
         perturbed_element = perturbed_dataset[i].ravel()
-        similarities.append(
-            ssim(
-                original_element,
-                perturbed_element,
-                data_range=2)
-            )
-        L1_distances.append(
-            np.max(np.abs(
-                original_element - perturbed_element
-            ))
-        )
+        similarities.append(ssim(original_element, perturbed_element, data_range=2))
+        L1_distances.append(np.max(np.abs(original_element - perturbed_element)))
     mean_SSIM = np.mean(similarities)
     max_distance = np.max(L1_distances)
-    print(f'Średnia wartość SSIM wynosi {mean_SSIM}, a największa odległość między pikselami wynosi: {max_distance}.')
+    print(
+        f"Średnia wartość SSIM wynosi {mean_SSIM}, a największa odległość między pikselami wynosi: {max_distance}."
+    )
     return mean_SSIM, max_distance
-###############################################################################
 
+
+###############################################################################
 
 
 def evaluate_algorithm(model, images, labels, device, perturbe_algorithm):
     dataset_for_perturbation = deepcopy(images)
     dataset_attacked = perturbe_algorithm(dataset_for_perturbation)
 
-    SSIM, distance = calculate_similarity(
-        dataset_for_perturbation,
-        dataset_attacked
-    )
+    SSIM, distance = calculate_similarity(dataset_for_perturbation, dataset_attacked)
     assert distance <= 0.3
 
-    perturbed_set = ContestDataset(dataset_attacked,
-                                labels,
-                                transform=transforms.ToTensor())
-    perturbed_loader = DataLoader(perturbed_set,
-                                batch_size=64,
-                                shuffle=False)
-    perturbed_accuracy = evaluate_network(
-        perturbed_loader,
-        model,
-        device,
-        verbose=True
+    perturbed_set = ContestDataset(
+        dataset_attacked, labels, transform=transforms.ToTensor()
     )
+    perturbed_loader = DataLoader(perturbed_set, batch_size=64, shuffle=False)
+    perturbed_accuracy = evaluate_network(perturbed_loader, model, device, verbose=True)
+
 
 perturbe_dataset_fn = vars.get("perturbe_dataset", None)
 dataset = vars.get("X_validation", None)
@@ -154,4 +145,3 @@ model = vars.get("net", None)
 device = vars.get("device", None)
 
 evaluate_algorithm(model, dataset, labels, device, perturbe_dataset_fn)
-

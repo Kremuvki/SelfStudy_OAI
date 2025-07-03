@@ -12,16 +12,18 @@ from PIL import Image
 # pip install nbconvert
 
 
-
 python_script_filename = "zadanie_jako_skrypt.py"
 
 
 # Command to convert .ipynb to .py
 command = [
-    "jupyter", "nbconvert", 
-    "--to", "script", 
-    "--output", python_script_filename.split(".")[0], 
-    "kwantyzacja_kolorow.ipynb"
+    "jupyter",
+    "nbconvert",
+    "--to",
+    "script",
+    "--output",
+    python_script_filename.split(".")[0],
+    "kwantyzacja_kolorow.ipynb",
 ]
 
 subprocess.run(command)
@@ -29,15 +31,17 @@ subprocess.run(command)
 # replace line CLEAN_VERSION = False with CLEAN_VERSION = True
 with open(python_script_filename, "r") as file:
     filedata = file.read()
-    filedata = re.sub("FINAL_EVALUATION_MODE = False", "FINAL_EVALUATION_MODE = True", filedata)
+    filedata = re.sub(
+        "FINAL_EVALUATION_MODE = False", "FINAL_EVALUATION_MODE = True", filedata
+    )
 
 with open(python_script_filename, "w") as file:
     file.write(filedata)
 
 # execute the python file
 vars = {
-    'script': str(Path(python_script_filename).name),
-    '__file__': str(Path(python_script_filename)),
+    "script": str(Path(python_script_filename).name),
+    "__file__": str(Path(python_script_filename)),
 }
 exec(open(python_script_filename).read(), vars)
 
@@ -48,18 +52,20 @@ from typing import Iterator
 from PIL import Image
 import numpy as np
 
+
 class ImageDataset:
     """Klasa, która ułatwia wczytywanie obrazków z danego folderu."""
+
     def __init__(self, image_dir: str):
         self.filelist = glob.glob(image_dir + "/*.jpg")
-        self.IMAGE_DIMS = (512,512)
+        self.IMAGE_DIMS = (512, 512)
 
     def __len__(self):
         return len(self.filelist)
 
     def __getitem__(self, idx) -> np.ndarray:
         with Image.open(self.filelist[idx]) as image:
-            image = image.convert('RGB')
+            image = image.convert("RGB")
             image = image.resize(self.IMAGE_DIMS)
             return np.array(image)
 
@@ -82,22 +88,30 @@ class ImageDataset:
 # Pamiętaj, żeby przy ewaluacji liczyć je w przestrzeni RGB, tzn. na wartościach całkowitych z przdziału [0, 255]
 # Skalowanie jest dopuszczalne tylko podczas treningu!
 
+
 # Zdefiniujmy kryterium oceny jakości kwantyzacji
 # Użyjemy do tego błędu średniokwadratowego (mean square error - MSE)
 def mse(img, img_quant):
-  return ((img_quant.astype(np.float32) - img.astype(np.float32))**2).mean()
+    return ((img_quant.astype(np.float32) - img.astype(np.float32)) ** 2).mean()
 
 
 # Następnie zdefinujmy koszt użycia kolorów
 # Im bliżej danemu kolorowi do "prostych" kolorów, tym mniejszy koszt jego użycia
 def color_cost(img_quant):
-    vertices = np.array([
-        [0, 0, 0], [0, 0, 255], [0, 255, 0], [0, 255, 255],
-        [255, 0, 0], [255, 0, 255], [255, 255, 0], [255, 255, 255]
-    ])
-    
-    pixels = img_quant.reshape(-1,3)
-    
+    vertices = np.array(
+        [
+            [0, 0, 0],
+            [0, 0, 255],
+            [0, 255, 0],
+            [0, 255, 255],
+            [255, 0, 0],
+            [255, 0, 255],
+            [255, 255, 0],
+            [255, 255, 255],
+        ]
+    )
+
+    pixels = img_quant.reshape(-1, 3)
 
     differences = pixels[:, np.newaxis, :] - vertices[np.newaxis, :, :]
     squared_distances = np.sum(differences**2, axis=2)
@@ -110,16 +124,19 @@ def color_cost(img_quant):
 def quantization_score(img, img_quant):
     assert img.dtype == np.uint8
     assert img_quant.dtype == np.uint8
-    assert len(np.unique(img_quant.reshape(-1,3), axis=0)) == 37
-       
+    assert len(np.unique(img_quant.reshape(-1, 3), axis=0)) == 37
+
     mse_cost = mse(img, img_quant)
     mean_color_cost, max_color_cost = color_cost(img_quant)
     score = mse_cost * 2 + max_color_cost * 21 + mean_color_cost * 42
-    print(f'MSE: {mse_cost:.4f}, max_color_cost: {max_color_cost:.4f}, mean_color_cost: {mean_color_cost:.4f}')
-    print(f'Score: {score:.4f}')
+    print(
+        f"MSE: {mse_cost:.4f}, max_color_cost: {max_color_cost:.4f}, mean_color_cost: {mean_color_cost:.4f}"
+    )
+    print(f"Score: {score:.4f}")
     return score
-###############################################################################
 
+
+###############################################################################
 
 
 def evaluate_algorithm(quantization_algorithm, data_dir):
@@ -132,6 +149,6 @@ def evaluate_algorithm(quantization_algorithm, data_dir):
         scores.append(score)
     return np.mean(scores)
 
-your_quantization_algorithm_fn = vars.get("your_quantization_algorithm", None)
-evaluate_algorithm(your_quantization_algorithm_fn, 'valid_data')
 
+your_quantization_algorithm_fn = vars.get("your_quantization_algorithm", None)
+evaluate_algorithm(your_quantization_algorithm_fn, "valid_data")

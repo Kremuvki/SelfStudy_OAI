@@ -11,12 +11,12 @@ from torch.utils.data import Dataset
 class Sentence:
     def __init__(self, words):
         self.words = words
-    
+
     def __len__(self):
         return len(self.words)
 
     def __repr__(self):
-        return ' '.join(self.words)
+        return " ".join(self.words)
 
 
 class ParsedSentence(Sentence):
@@ -46,6 +46,7 @@ class ParsedSentence(Sentence):
                 if u != parent:
                     assert heads[u] == 0
                     helper(u, v)
+
         helper(root, -1)
         return ParsedSentence(word_tokens, heads)
 
@@ -67,7 +68,7 @@ class ParsedSentence(Sentence):
             if head == 0:
                 root = i
             else:
-                node_to_children[head-1].append(i)
+                node_to_children[head - 1].append(i)
         if root is None:
             raise ValueError("No root found")
         return root, node_to_children
@@ -75,16 +76,18 @@ class ParsedSentence(Sentence):
     def to_tree(self) -> Tree:
         root = self.root
         node_to_children = self.node_to_children
+
         def helper(idx: int, depth: int = 0) -> Tree:
             if len(node_to_children[idx]) == 0:
                 return self.words[idx]
-            if depth  > 13:
+            if depth > 13:
                 raise ValueError("Tree too deep")
-            
+
             chlds = [helper(child, depth + 1) for child in node_to_children[idx]]
             return Tree(self.words[idx], chlds)
+
         return helper(root)
-    
+
     def pretty_print(self):
         self.to_tree().pretty_print()
 
@@ -102,7 +105,7 @@ def read_conll(filepath) -> List[ParsedSentence]:
     with open(filepath) as f:
         words, heads = [], []
         for line in f.readlines():
-            sp = line.strip().split('\t')
+            sp = line.strip().split("\t")
             if len(sp) >= 2:
                 words.append(sp[1])
                 heads.append(int(sp[6]))
@@ -133,12 +136,12 @@ def merge_subword_tokens(
         subword_tokens (List[torch.Tensor]): Lista uprzednio wyliczonych tokenów podsłów dla wejściowego zdania.
         subword_embeddings (List[torch.Tensor]): Lista uprzednio wyliczonych embeddingów podsłów dla wejściowego zdania.
         tokenizer (PreTrainedTokenizer): Tokenizator użyty do uzyskania tokenów podsłów (subword_tokens).
-        agg_fn (Callable[[List[torch.Tensor]], torch.Tensor]): Funkcja agregująca embeddingi podsłów w embeddingi słów. 
+        agg_fn (Callable[[List[torch.Tensor]], torch.Tensor]): Funkcja agregująca embeddingi podsłów w embeddingi słów.
             Funkcja agg_fn powinna przyjmować listę embeddingów podsłów i zwracać pojedynczy embedding słowa.
         verbose (bool, optional): Czy wypisać na standardowe wyjście tokeny podsłów i ich odpowiadające słowa. Domyślnie False.
 
     Zwraca:
-        torch.Tensor: Dwuwymiarowy tensor reprezentujący embeddingi słów. Pierwszy wymiar odpowiada indeksom słów, 
+        torch.Tensor: Dwuwymiarowy tensor reprezentujący embeddingi słów. Pierwszy wymiar odpowiada indeksom słów,
             a drugi wymiar odpowiada wymiarom embeddingu.
 
     Wyjątki:
@@ -161,11 +164,11 @@ def merge_subword_tokens(
             tokens_in_word = [tokenizer.decode([tok]) for tok in int_list]
             print(f"{word_token: <15} ->  {', '.join(tokens_in_word)}")
 
-        embeddings = subword_embeddings[i: i + len(tokens_in_word)]
+        embeddings = subword_embeddings[i : i + len(tokens_in_word)]
         i += len(tokens_in_word)
 
         result += [agg_fn(embeddings)]
-    
+
     tokens_ = torch.tensor([t.item() for t in tokens_])
     if tokens_.shape != subword_tokens.shape or torch.any(tokens_ != subword_tokens):
         print(tokens_, subword_tokens)
